@@ -2,6 +2,17 @@
 
 class ErrorHandler 
 {
+  public static function handleError(
+    int $errno,
+    string $errstr,
+    string $errfile,
+    int $errline): void 
+  {
+    // TODO IN A PRODUCTION ENVIRONMENT, OUTPUT A MORE GENERIC MESSAGE THAN BELOW
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+  }
+
+
   public static function handleException(Throwable $exception): void 
   {
     // Set generic http response code for server errors
@@ -15,6 +26,5 @@ class ErrorHandler
       "file" => $exception->getFile(),
       "line" => $exception->getLine()
     ]);
-
   }
 }
