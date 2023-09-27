@@ -4,19 +4,24 @@
 
 class TaskController 
 {
-  public function __construct(private TaskGateway $gateway)
-  {
-    
-  }
+  public function __construct(private TaskGateway $gateway) {}
 
   public function processRequest(string $method, ?string $id): void 
   {
-    // If no id, the request is for collections
+    // If no id, the request is for collections or to create a new resource
     if ($id === null) {
       if ($method == 'GET') {
-        echo 'index';
+        echo json_encode($this->gateway->getAll());
+        
       } elseif ($method == 'POST') {
-        echo 'create';
+
+        // Get POST data in the form of JSON from the request body
+        // Returns empty array if JSON is invalid or body is empty
+        $data = (array) json_decode(file_get_contents("php://input"), true);
+        
+        $id = $this->gateway->create($data);
+        $this->respondCreated($id);
+
       } else {
         // If wrong method is sent
         $this->responseMethodNotAllowed("GET, POST");
@@ -24,9 +29,18 @@ class TaskController
     } // There is an id, so handle it based on http method
       else {
 
+        // Make sure the resource exists
+        $task = $this->gateway->get($id);
+
+        // If not, return 404 
+        if ($task === false) {
+          $this->respondNotFound($id);
+          return;
+        }
+
         switch($method) {
           case "GET":
-            echo "show $id";
+            echo json_encode($task);
             break;
 
           case "PATCH":
@@ -47,5 +61,17 @@ class TaskController
   {
     http_response_code(405);
     header("Allow: $allowed_methods");
+  }
+
+  private function respondNotFound(string $id): void
+  {
+    http_response_code(404);
+    echo json_encode(["message" => "Task with id $id was not found"]);
+  }
+
+  private function respondCreated(string $id): void
+  {
+    http_response_code(201);
+    echo json_encode(["message" => "Task created", "id" => $id]);
   }
 }
