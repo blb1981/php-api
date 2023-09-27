@@ -7,3 +7,18 @@ MariaDB [api_db]> CREATE TABLE task (
     -> PRIMARY KEY (id),
     -> INDEX (name)
     -> );
+
+SQL for the user table
+
+CREATE TABLE user (
+    id INT NOT NULL AUTO_INCREMENT,
+    first_name VARCHAR(128) NOT NULL,
+    last_name VARCHAR(128) NULL,
+    username VARCHAR(128) NOT NULL,
+    email VARCHAR(128) NOT NULL,
+    api_key VARCHAR(32) NOT NULL, 
+    PRIMARY KEY (id),
+    UNIQUE (username),
+    UNIQUE (email),
+    UNIQUE (api_key)
+);
