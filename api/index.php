@@ -2,16 +2,7 @@
 
 declare(strict_types=1);
 
-require dirname(__DIR__) . "/vendor/autoload.php";
-
-set_error_handler("ErrorHandler::handleError");
-set_exception_handler('ErrorHandler::handleException');
-
-// Create environment variables variable
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
-
-// Load env variables to be used in the $_ENV superglobal
-$dotenv->load();
+require __DIR__ . "/bootstrap.php";
 
 // echo $_SERVER["REQUEST_URI"];
 $path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
@@ -34,14 +25,19 @@ if ($resource != "tasks") {
   exit;
 }
 
-// Removed the line below after requiring the autoload file above
-// require dirname(__DIR__) . "/src/TaskController.php";
 
-// Set all responses to be json
-header("Content-type: application/json; charset=UTF-8");
 
-// Establish database connection
+// Create database object
 $database = new Database($_ENV['DB_HOST'], $_ENV['DB_NAME'], $_ENV['DB_USER'], $_ENV['DB_PASS']);
+
+// Create user gateway object
+$user_gateway = new UserGateway($database);
+
+$auth = new Auth($user_gateway);
+
+if (!$auth->authenticateAPIKey()) {
+  exit;
+}
 
 // Test the connection
 // $database->getConnection();
