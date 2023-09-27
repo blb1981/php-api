@@ -6,6 +6,12 @@ require dirname(__DIR__) . "/vendor/autoload.php";
 
 set_exception_handler('ErrorHandler::handleException');
 
+// Create environment variables variable
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+
+// Load env variables to be used in the $_ENV superglobal
+$dotenv->load();
+
 // echo $_SERVER["REQUEST_URI"];
 $path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 $parts = explode("/", $path);
@@ -33,6 +39,15 @@ if ($resource != "tasks") {
 // Set all responses to be json
 header("Content-type: application/json; charset=UTF-8");
 
-$controller = new TaskController;
+// Establish database connection
+$database = new Database($_ENV['DB_HOST'], $_ENV['DB_NAME'], $_ENV['DB_USER'], $_ENV['DB_PASS']);
+
+// Test the connection
+// $database->getConnection();
+
+// Create instance of TaskGateway class to pass into the TaskController class
+$task_gateway = new TaskGateway($database);
+
+$controller = new TaskController($task_gateway);
 
 $controller->processRequest($_SERVER['REQUEST_METHOD'], $id);

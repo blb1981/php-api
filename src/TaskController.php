@@ -2,7 +2,12 @@
 
 // No namespace for this simple API but add one if needed
 
-class TaskController {
+class TaskController 
+{
+  public function __construct(private TaskGateway $gateway)
+  {
+    
+  }
 
   public function processRequest(string $method, ?string $id): void 
   {
