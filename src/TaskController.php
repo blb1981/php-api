@@ -19,6 +19,15 @@ class TaskController
         // Returns empty array if JSON is invalid or body is empty
         $data = (array) json_decode(file_get_contents("php://input"), true);
         
+        // Validate data
+        $errors = $this->getValidationErrors($data);
+
+        // Return errors there are any
+        if (!empty($errors)) {
+          $this->respondUnprocessableEntity($errors);
+          return;
+        }
+
         $id = $this->gateway->create($data);
         $this->respondCreated($id);
 
@@ -44,7 +53,21 @@ class TaskController
             break;
 
           case "PATCH":
-            echo "update $id";
+            // Get PATCH data in the form of JSON from the request body
+            // Returns empty array if JSON is invalid or body is empty
+            $data = (array) json_decode(file_get_contents("php://input"), true);
+            
+            // Validate data
+            $errors = $this->getValidationErrors($data, false);
+
+            // Return errors there are any
+            if (!empty($errors)) {
+              $this->respondUnprocessableEntity($errors);
+              return;
+            }
+
+            $rows = $this->gateway->update($id, $data);
+            echo json_encode(["message" => "Task updated", "rows" => $rows ]);
             break;
 
           case "DELETE": 
@@ -55,6 +78,12 @@ class TaskController
             $this->responseMethodNotAllowed("GET, PATCH, DELETE");
           }
       }
+  }
+
+  private function respondUnprocessableEntity(array $errors): void
+  {
+    http_response_code(422);
+    echo json_encode(["errors" => $errors]);
   }
 
   private function responseMethodNotAllowed(string $allowed_methods): void
@@ -73,5 +102,22 @@ class TaskController
   {
     http_response_code(201);
     echo json_encode(["message" => "Task created", "id" => $id]);
+  }
+
+  private function getValidationErrors(array $data, bool $is_new = true): array
+  {
+    $errors = [];
+    
+    if ($is_new && empty($data["name"])) {
+      $errors[] = "name is required";
+    }
+
+    if (!empty($data["priority"])) {
+      if (filter_var($data["priority"], FILTER_VALIDATE_INT) === false) {
+        $errors[] = "priority must be an integer";
+      }
+    }
+
+    return $errors;
   }
 }

@@ -79,4 +79,71 @@ class TaskGateway
 
     return $this->conn->lastInsertId();
   }
+
+  public function update(string $id, array $data): int
+  {
+    $fields = [];
+
+    if (!empty($data["name"])) {
+      $fields["name"] = [
+        $data["name"],
+        PDO::PARAM_STR
+      ];
+    }
+
+    // if (!empty($data["priority"])) {
+    //   $fields["priority"] = [
+    //     $data["priority"],
+    //     PDO::PARAM_INT
+    //   ];
+    // }
+    // if (!empty($data["is_completed"])) {
+    //   $fields["is_completed"] = [
+    //     $data["is_completed"],
+    //     PDO::PARAM_BOOL
+    //   ];
+    // }
+
+    // array_key_exists is used here because null or false counts as empty in PHP
+    if (array_key_exists("priority", $data)) {
+      $fields["priority"] = [
+        $data["priority"],
+        // set PDO data type to null if necessary
+        $data["priority"] === null ? PDO::PARAM_NULL : PDO::PARAM_INT 
+      ];
+    }
+    
+    // array_key_exists is used here because null or false counts as empty in PHP
+    if (array_key_exists("is_completed", $data)) {
+      $fields["is_completed"] = [
+        $data["is_completed"],
+        PDO::PARAM_BOOL
+      ];
+    }
+
+    // Make sure fields are not empty
+    if (empty($fields)) {
+      return 0;
+    } else {
+      // Build the SQL query
+      $sets = array_map(function($value){
+        return "$value = :$value";
+      }, array_keys($fields));
+  
+      $sql = "UPDATE task"
+              . " SET " . implode(", ", $sets)
+              . " WHERE id = :id";
+  
+      $stmt = $this->conn->prepare($sql);
+
+      $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+
+      foreach($fields as $name => $values) {
+        $stmt->bindValue(":$name", $values[0], $values[1]);
+      }
+
+      $stmt->execute();
+      return $stmt->rowCount();
+    }
+  }
 }
