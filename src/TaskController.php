@@ -4,14 +4,17 @@
 
 class TaskController 
 {
-  public function __construct(private TaskGateway $gateway) {}
+  public function __construct(
+    private TaskGateway $gateway,
+    private int $user_id
+    ) {}
 
   public function processRequest(string $method, ?string $id): void 
   {
     // If no id, the request is for collections or to create a new resource
     if ($id === null) {
       if ($method == 'GET') {
-        echo json_encode($this->gateway->getAll());
+        echo json_encode($this->gateway->getAllForUser($this->user_id));
         
       } elseif ($method == 'POST') {
 
@@ -28,7 +31,7 @@ class TaskController
           return;
         }
 
-        $id = $this->gateway->create($data);
+        $id = $this->gateway->createForUser($this->user_id, $data);
         $this->respondCreated($id);
 
       } else {
@@ -39,7 +42,7 @@ class TaskController
       else {
 
         // Make sure the resource exists
-        $task = $this->gateway->get($id);
+        $task = $this->gateway->getForUser($this->user_id, $id);
 
         // If not, return 404 
         if ($task === false) {
@@ -66,12 +69,12 @@ class TaskController
               return;
             }
 
-            $rows = $this->gateway->update($id, $data);
+            $rows = $this->gateway->updateForUser($this->user_id, $id, $data);
             echo json_encode(["message" => "Task updated", "rows" => $rows ]);
             break;
 
           case "DELETE": 
-            $rows = $this->gateway->delete($id);
+            $rows = $this->gateway->deleteForUser($this->user_id, $id);
             echo json_encode(["message" => "Task deleted", "rows" => $rows]);
             break;
 

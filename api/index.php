@@ -39,12 +39,14 @@ if (!$auth->authenticateAPIKey()) {
   exit;
 }
 
+$user_id = $auth->getUserID();
+
 // Test the connection
 // $database->getConnection();
 
 // Create instance of TaskGateway class to pass into the TaskController class
 $task_gateway = new TaskGateway($database);
 
-$controller = new TaskController($task_gateway);
+$controller = new TaskController($task_gateway, $user_id);
 
 $controller->processRequest($_SERVER['REQUEST_METHOD'], $id);

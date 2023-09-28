@@ -23,3 +23,16 @@ CREATE TABLE user (
     UNIQUE (email),
     UNIQUE (api_key)
 );
+
+SQL to add user_id column to task table
+
+ALTER TABLE task
+    ADD user_id INT NOT NULL,
+    ADD INDEX (user_id);
+
+SQL to set foreign key to task table
+
+ALTER TABLE task
+    ADD FOREIGN KEY (user_id)
+    REFERENCES user(id)
+    ON DELETE CASCADE ON UPDATE CASCADE;
