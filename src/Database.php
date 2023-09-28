@@ -2,6 +2,9 @@
 
 class Database
 {
+  // Store connection to avoide multiple connections
+  private ?PDO $conn = null;
+
   // Using constructor promotion to make constructor parameters
   // properties for this object
   public function __construct(
@@ -13,14 +16,20 @@ class Database
     
   public function getConnection(): PDO
   {
-    // Set data source name
-    $dsn = "mysql:host={$this->host};dbname={$this->name};charset=utf8";
+    // If connection is null, connect
+    if ($this->conn === null) {
+      // Set data source name
+      $dsn = "mysql:host={$this->host};dbname={$this->name};charset=utf8";
+  
+      // Initiate new PDO instance and throw errors if there is trouble connecting
+      $this->conn = new PDO($dsn, $this->user, $this->password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::ATTR_STRINGIFY_FETCHES => false
+      ]);
+    }
 
-    // Initiate new PDO instance and throw errors if there is trouble connecting
-    return new PDO($dsn, $this->user, $this->password, [
-      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-      PDO::ATTR_EMULATE_PREPARES => false,
-      PDO::ATTR_STRINGIFY_FETCHES => false
-    ]);
+    // If not, return the connection already established
+    return $this->conn;
   }
 }
