@@ -33,9 +33,21 @@ $database = new Database($_ENV['DB_HOST'], $_ENV['DB_NAME'], $_ENV['DB_USER'], $
 // Create user gateway object
 $user_gateway = new UserGateway($database);
 
+// Some web servers will strip out Authorization header
+// var_dump($_SERVER);
+// So use this as a workaround
+// $headers = apache_request_headers();
+// echo $headers["Authorization"];
+// OORRRR modify the .htaccess file, which is what we did
+
+
 $auth = new Auth($user_gateway);
 
-if (!$auth->authenticateAPIKey()) {
+// if (!$auth->authenticateAPIKey()) {
+//   exit;
+// }
+
+if (!$auth->authenticateAccessToken()) {
   exit;
 }
 
